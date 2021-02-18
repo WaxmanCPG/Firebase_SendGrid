@@ -36,6 +36,17 @@ exports.sendAccountTransferEmails = functions.https.onRequest((req, res) => {
           "newAccount": newAccount,
         },
       };
+      // Create email for tech support
+      const techSupportMsg = {
+        to: "techsupport@leaksmart.com",
+        from: "noreply@leaksmart.com",
+        templateId: "d-253f65af4cdc4993ab8ff12a73480f97",
+        dynamic_template_data:
+        {
+          "oldAccount": oldAccount,
+          "newAccount": newAccount,
+        },
+      };
 
       // NOTE this is the Sendmail API key
       sgMail.setApiKey(
@@ -46,7 +57,12 @@ exports.sendAccountTransferEmails = functions.https.onRequest((req, res) => {
       // Send messages
       sgMail.send(clientMsg).then(() => {
         sgMail.send(contractorMsg).then(() => {
-          res.status(200).send("{'status': 'success'}");
+          sgMail.send(techSupportMsg).then(() => {
+            res.status(200).send("{'status': 'success'}");
+          }).catch((err) => {
+            res.status(500).send("{'status':'error', 'errorMessage': '" +
+            err + "'}");
+          });
         }).catch((err) => {
           res.status(500).send("{'status':'error', 'errorMessage': '"+err+"'}");
         });
